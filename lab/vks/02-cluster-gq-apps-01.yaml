@@ -1,0 +1,37 @@
+# Clúster VKS para la app (en el diagrama lo crea VCF Automation desde el catálogo; aquí con kubectl).
+# Antes de aplicar, confirma los valores marcados con estos comandos (contexto sp-gq):
+#   kubectl get clusterclass -n vmware-system-vks-public          -> class
+#   kubectl get kr                                                -> version (VKr 1.34.x)
+#   kubectl get virtualmachineclass -n gq-apps                    -> vmClass
+#   kubectl get storageclass                                      -> storageClass
+# Aplicar:  kubectl apply -f lab/vks/02-cluster-gq-apps-01.yaml
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: gq-apps-01
+  namespace: gq-apps
+spec:
+  clusterNetwork:
+    services: {cidrBlocks: ["10.96.0.0/12"]}
+    pods: {cidrBlocks: ["192.168.156.0/20"]}
+    serviceDomain: cluster.local
+  topology:
+    class: builtin-generic-v3.5.0               # CONFIRMAR (es la que usó el clúster de PAIS)
+    classNamespace: vmware-system-vks-public
+    version: v1.34.11+vmware.1-REEMPLAZAR       # copiar la VERSION exacta de `kubectl get kr`
+    controlPlane:
+      replicas: 1
+    workers:
+      machineDeployments:
+        - class: node-pool
+          name: np-1
+          replicas: 2
+    variables:
+      - name: vmClass
+        value: best-effort-medium               # CONFIRMAR
+      - name: storageClass
+        value: REEMPLAZAR-STORAGE-CLASS         # la storage policy asignada al namespace
+      - name: trust
+        value:
+          additionalTrustedCAs:
+            - name: harbor-ca                   # clave del Secret gq-apps-01-user-trusted-ca-secret

@@ -1,0 +1,56 @@
+# Valores por defecto. Lo propio de cada ambiente va en deploy/environments/<ambiente>/values.yaml
+replicaCount: 2
+
+image:
+  # Harbor regional del lab (proyecto privado). La imagen llega por réplica pull desde GHCR.
+  repository: 10.2.20.7/gq-apps/portal-gq
+  # El pipeline de GitHub Actions actualiza este valor por PR en el values del ambiente.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# Secret docker-registry con la cuenta robot de Harbor (solo pull).
+# Lo crea External Secrets a partir de Key Vault (ver externalSecrets.pullSecret).
+imagePullSecrets:
+  - name: harbor-pull
+
+ambiente: local
+
+service:
+  type: LoadBalancer   # NSX VPC asigna una IP externa del bloque 10.2.20.0/24
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  host: portal-gq.vcflab.local
+  annotations: {}
+  tls: []
+
+resources:
+  requests: {cpu: 50m, memory: 96Mi}
+  limits: {cpu: 500m, memory: 256Mi}
+
+externalSecrets:
+  # ClusterSecretStore que apunta a Azure Key Vault (deploy/platform/secret-stores)
+  storeName: azure-kv
+  refreshInterval: 1m
+  # Secret con la configuración de la app. Cada entrada mapea una variable a un secreto de Key Vault.
+  appSecret:
+    name: portal-gq-config
+    data:
+      - secretKey: DB_USER
+        remoteKey: portal-gq-db-user
+      - secretKey: DB_PASSWORD
+        remoteKey: portal-gq-db-password
+      - secretKey: API_KEY
+        remoteKey: portal-gq-api-key
+      - secretKey: MENSAJE
+        remoteKey: portal-gq-mensaje
+  # Secret docker-registry para el imagePullSecret (cuenta robot de Harbor guardada en Key Vault)
+  pullSecret:
+    enabled: true
+    name: harbor-pull
+    registry: 10.2.20.7
+    usernameKey: harbor-robot-portal-gq-user
+    passwordKey: harbor-robot-portal-gq-password
