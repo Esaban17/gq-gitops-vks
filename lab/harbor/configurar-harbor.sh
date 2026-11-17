@@ -89,8 +89,9 @@ else
     umask 077; echo "$R_SECRET" > "$(dirname "$0")/.robot-secret"; echo "   (secret en $(dirname "$0")/.robot-secret, bórralo después)"
   fi
 fi
-unset R_SECRET H_PASS ROBOT_JSON_SM
+unset R_SECRET ROBOT_JSON_SM
 
 echo "== Primera ejecución manual de la réplica"
 api -X POST "$HARBOR/api/v2.0/replication/executions" -d "{\"policy_id\":$POL_ID}" -w '   HTTP %{http_code}\n' -o /dev/null
 echo "Revisa en Harbor > Administration > Replications. Si aún no hay imagen en GHCR, la ejecución sale vacía: es normal."
+unset H_PASS
