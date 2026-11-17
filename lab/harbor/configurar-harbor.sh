@@ -3,8 +3,8 @@
 #   - Proyecto privado gq-apps
 #   - Endpoint de registro hacia GHCR (con un PAT de GitHub de solo lectura de paquetes)
 #   - Regla de réplica PULL programada: ghcr.io/<owner>/portal-gq -> gq-apps/portal-gq (paso 4)
-#   - Cuenta robot de solo pull para el imagePullSecret (paso 7), guardada en Azure Key Vault
-# Requisitos: curl, jq; az logueado si quieres que guarde el robot en Key Vault.
+#   - Cuenta robot de solo pull para el imagePullSecret (paso 7), guardada en AWS Secrets Manager
+# Requisitos: curl, jq; AWS CLI con credenciales si quieres que guarde el robot en Secrets Manager.
 # Uso:  bash lab/harbor/configurar-harbor.sh
 set -euo pipefail
 
@@ -13,7 +13,8 @@ PROJECT="${PROJECT:-gq-apps}"
 GH_OWNER="${GH_OWNER:-esaban17}"           # en minúsculas, como lo publica GHCR
 IMAGE="${IMAGE:-portal-gq}"
 CRON="${CRON:-0 */5 * * * *}"              # cron de Harbor (6 campos): cada 5 minutos
-ENV_FILE="$(cd "$(dirname "$0")/.." && pwd)/azure/.eso-sp.env"
+AWS_REGION="${AWS_REGION:-us-east-1}"
+ROBOT_SECRET="${ROBOT_SECRET:-gq-lab/harbor-robot-portal-gq}"
 
 read -rp  "Usuario admin de Harbor [admin]: " H_USER; H_USER="${H_USER:-admin}"
 read -rsp "Password de $H_USER en Harbor: " H_PASS; echo
@@ -73,19 +74,22 @@ if [[ -z "$R_NAME" ]]; then
   echo "   Para regenerar: Harbor > Projects > $PROJECT > Robot Accounts > Refresh secret."
 else
   echo "   robot: $R_NAME"
-  if [[ -s "$ENV_FILE" ]] && command -v az >/dev/null && az account show -o none 2>/dev/null; then
-    KV="$(grep ^AZ_KV_NAME= "$ENV_FILE" | cut -d= -f2)"
-    az keyvault secret set --vault-name "$KV" -n harbor-robot-portal-gq-user     --value "$R_NAME"   -o none
-    az keyvault secret set --vault-name "$KV" -n harbor-robot-portal-gq-password --value "$R_SECRET" -o none
-    echo "   guardado en Key Vault $KV (harbor-robot-portal-gq-user / -password)"
+  ROBOT_JSON_SM="$(jq -nc --arg u "$R_NAME" --arg p "$R_SECRET" '{username:$u,password:$p}')"
+  if command -v aws >/dev/null && aws sts get-caller-identity >/dev/null 2>&1; then
+    if aws secretsmanager describe-secret --region "$AWS_REGION" --secret-id "$ROBOT_SECRET" >/dev/null 2>&1; then
+      aws secretsmanager put-secret-value --region "$AWS_REGION" --secret-id "$ROBOT_SECRET" --secret-string "$ROBOT_JSON_SM" >/dev/null
+    else
+      aws secretsmanager create-secret --region "$AWS_REGION" --name "$ROBOT_SECRET" --secret-string "$ROBOT_JSON_SM" \
+        --description "Robot de Harbor para imagePullSecret (GQ LAB)" >/dev/null
+    fi
+    echo "   guardado en Secrets Manager: $ROBOT_SECRET ($AWS_REGION)"
   else
-    echo "   No encontré az/.eso-sp.env. Guárdalo tú en Key Vault:"
-    echo "     az keyvault secret set --vault-name <vault> -n harbor-robot-portal-gq-user --value '$R_NAME'"
-    echo "     az keyvault secret set --vault-name <vault> -n harbor-robot-portal-gq-password --value '<secret>'"
+    echo "   No encontré AWS CLI con credenciales. Guárdalo tú en Secrets Manager:"
+    echo "     aws secretsmanager create-secret --name $ROBOT_SECRET --secret-string '{\"username\":\"$R_NAME\",\"password\":\"<secret>\"}'"
     umask 077; echo "$R_SECRET" > "$(dirname "$0")/.robot-secret"; echo "   (secret en $(dirname "$0")/.robot-secret, bórralo después)"
   fi
 fi
-unset R_SECRET H_PASS
+unset R_SECRET H_PASS ROBOT_JSON_SM
 
 echo "== Primera ejecución manual de la réplica"
 api -X POST "$HARBOR/api/v2.0/replication/executions" -d "{\"policy_id\":$POL_ID}" -w '   HTTP %{http_code}\n' -o /dev/null

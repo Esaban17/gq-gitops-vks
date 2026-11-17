@@ -1,6 +1,6 @@
 apiVersion: v2
 name: portal-gq
-description: App de demo GitOps en VKS (Argo CD + Helm + External Secrets Operator con Azure Key Vault)
+description: App de demo GitOps en VKS (Argo CD + Helm + External Secrets Operator con AWS Secrets Manager)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.1.0"
