@@ -1,0 +1,18 @@
+# Opcional (app of apps): una sola Application que crea las tres de deploy/argocd/apps.
+# Úsala solo si la instancia de Argo CD del Supervisor puede escribir Applications en su propio
+# namespace vía "in-cluster". Si no, aplica las tres directo con kubectl (ver docs/GUIA.md).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-gq-apps
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Esaban17/gq-gitops-vks.git
+    targetRevision: main
+    path: deploy/argocd/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd-gq
+  syncPolicy:
+    automated: {prune: false, selfHeal: true}

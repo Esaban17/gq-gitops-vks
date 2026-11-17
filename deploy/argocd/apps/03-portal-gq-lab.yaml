@@ -1,0 +1,33 @@
+# La app: chart Helm + values del ambiente lab (pasos 5 y 6 del diagrama).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portal-gq-lab
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Esaban17/gq-gitops-vks.git
+    targetRevision: main
+    path: deploy/charts/portal-gq
+    helm:
+      releaseName: portal-gq
+      valueFiles:
+        - ../../environments/lab/values.yaml
+  destination:
+    name: gq-apps-01
+    namespace: portal-gq
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        # VKS aplica Pod Security "restricted"; el chart ya cumple, se deja explícito
+        pod-security.kubernetes.io/enforce: restricted
+    retry:
+      limit: 10
+      backoff: {duration: 30s, factor: 2, maxDuration: 5m}

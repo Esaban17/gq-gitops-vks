@@ -1,0 +1,8 @@
+# Ambiente "lab" (clúster VKS gq-apps-01 en GQ LAB, VCF 9.1.1)
+ambiente: lab
+replicaCount: 2
+
+image:
+  repository: 10.2.20.7/gq-apps/portal-gq
+  # Lo actualiza GitHub Actions por PR (paso 3 del diagrama). No editar a mano salvo rollback.
+  tag: "sha-0000000"
