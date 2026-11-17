@@ -39,13 +39,18 @@ if ! aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$OIDC_
 fi
 
 echo "== Rol $ROLE (solo push a $REPO, solo desde $GH_REPO@main)"
+# GitHub puede emitir el 'sub' con IDs inmutables (repo:owner@ID/repo@ID:ref:...).
+# Se aceptan ambos formatos, siempre limitados a este repo y a la rama main.
+OWNER_ID="$(gh api "repos/${GH_REPO}" --jq .owner.id)"
+REPO_ID="$(gh api "repos/${GH_REPO}" --jq .id)"
+SUB_IDS="repo:${GH_REPO%%/*}@${OWNER_ID}/${GH_REPO##*/}@${REPO_ID}:ref:refs/heads/main"
 TRUST="$(cat <<JSON
 {"Version":"2012-10-17","Statement":[{"Effect":"Allow",
  "Principal":{"Federated":"$OIDC_ARN"},
  "Action":"sts:AssumeRoleWithWebIdentity",
  "Condition":{
    "StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com",
-                   "token.actions.githubusercontent.com:sub":"repo:${GH_REPO}:ref:refs/heads/main"}}}]}
+                   "token.actions.githubusercontent.com:sub":["repo:${GH_REPO}:ref:refs/heads/main","${SUB_IDS}"]}}}]}
 JSON
 )"
 if aws iam get-role --role-name "$ROLE" >/dev/null 2>&1; then
