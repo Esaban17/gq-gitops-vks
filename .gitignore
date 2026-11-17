@@ -1,0 +1,6 @@
+# Credenciales locales que generan los scripts del lab: nunca a Git
+lab/azure/.eso-sp.env
+lab/harbor/.robot-secret
+*.kubeconfig
+__pycache__/
+.venv/
