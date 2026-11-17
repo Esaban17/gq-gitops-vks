@@ -36,7 +36,8 @@ for i in $(seq 1 20); do
   [[ -n "$TOKEN" ]] && break; sleep 2
 done
 [[ -n "$TOKEN" ]] || { echo "No obtuve el token del ServiceAccount"; exit 1; }
-SERVER="$($K config view --minify -o jsonpath='{.clusters[0].cluster.server}')"
+# VKS_SERVER permite fijar la IP real cuando el kubeconfig local apunta a un túnel (127.0.0.1)
+SERVER="${VKS_SERVER:-$($K config view --minify -o jsonpath='{.clusters[0].cluster.server}')}"
 CA_DATA="$($K config view --minify --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')"
 echo "API del clúster VKS: $SERVER"
 
