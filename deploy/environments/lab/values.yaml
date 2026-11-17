@@ -4,4 +4,4 @@ replicaCount: 2
 image:
   repository: 10.2.20.7/gq-apps/portal-gq
   # Lo actualiza GitHub Actions por PR (paso 3 del diagrama). No editar a mano salvo rollback.
-  tag: "sha-b0dc440"
+  tag: "sha-03c39e3"
