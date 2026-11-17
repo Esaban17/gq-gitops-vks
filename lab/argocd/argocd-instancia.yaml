@@ -1,0 +1,10 @@
+# Instancia de Argo CD (ArgoCD Service del Supervisor) en el mismo vSphere Namespace que el clúster VKS.
+# Si la versión no es válida, `kubectl describe argocd argocd-1 -n gq-apps` muestra las aceptadas (3.4.x/3.5.x).
+# Aplicar:  kubectl --context sp-gq apply -f lab/argocd/argocd-instancia.yaml
+apiVersion: argocd-service.vsphere.vmware.com/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd-1
+  namespace: gq-apps
+spec:
+  version: 3.5.0+vmware.1-vks.1
