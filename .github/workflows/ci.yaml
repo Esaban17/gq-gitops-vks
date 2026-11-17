@@ -1,8 +1,9 @@
 # Pasos 1 a 3 del diagrama:
 #  1) push en app/ dispara el pipeline
-#  2) build de la imagen y push a GHCR (equivalente a ACR)
+#  2) build de la imagen y push a Amazon ECR (equivalente a ACR). Login por OIDC: sin llaves en GitHub.
 #  3) PR que actualiza image.tag en deploy/environments/lab/values.yaml
-# Harbor replica la imagen desde GHCR (paso 4) y Argo CD despliega cuando se fusiona el PR (5 y 6).
+# Harbor replica la imagen desde ECR (paso 4) y Argo CD despliega cuando se fusiona el PR (5 y 6).
+# Requiere la variable de repositorio AWS_ROLE_ARN (la crea lab/aws/03-crear-ecr.sh).
 name: ci-portal-gq
 
 on:
@@ -13,11 +14,12 @@ on:
 
 permissions:
   contents: write
-  packages: write
   pull-requests: write
+  id-token: write          # token OIDC para asumir el rol de AWS
 
 env:
-  IMAGE_NAME: portal-gq
+  IMAGE_NAME: portal-gq    # repositorio en ECR
+  AWS_REGION: us-east-1
   VALUES_FILE: deploy/environments/lab/values.yaml
 
 jobs:
@@ -26,23 +28,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Credenciales de AWS por OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login a Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Calcular nombre y tag de la imagen
         id: meta
         run: |
-          OWNER="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
-          TAG="sha-${GITHUB_SHA::7}"
-          echo "image=ghcr.io/${OWNER}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "image=${{ steps.ecr.outputs.registry }}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build y push a GHCR
+      - name: Build y push a ECR
         uses: docker/build-push-action@v6
         with:
           context: app
@@ -69,8 +73,8 @@ jobs:
           body: |
             Actualiza `image.tag` del ambiente **lab** a `${{ steps.meta.outputs.tag }}`.
 
-            - Imagen en GHCR: `${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}`
-            - Harbor la replica a `10.2.20.7/gq-apps/portal-gq` con la regla pull programada (cada 5 min).
+            - Imagen en ECR: `${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}`
+            - Harbor la replica a `10.2.20.7/gq-apps/portal-gq` con la regla pull programada `ecr-portal-gq` (cada 5 min).
             - Fusiona cuando la réplica haya corrido; Argo CD sincroniza solo.
           add-paths: ${{ env.VALUES_FILE }}
           labels: despliegue-lab

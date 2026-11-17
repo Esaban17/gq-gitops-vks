@@ -4,3 +4,4 @@ lab/harbor/.robot-secret
 *.kubeconfig
 __pycache__/
 .venv/
+lab/aws/.harbor-ecr.env
