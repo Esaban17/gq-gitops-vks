@@ -31,7 +31,11 @@ spec:
         value: best-effort-medium
       - name: storageClass
         value: supervisor-storage-policy        # asignada al namespace gq-apps
-      - name: trust
+      - name: osConfiguration                 # en las clases builtin-generic-v3 la CA va aquí
         value:
-          additionalTrustedCAs:
-            - name: harbor-ca                   # clave del Secret gq-apps-01-user-trusted-ca-secret
+          trust:
+            additionalTrustedCAs:
+              - caCert:
+                  secretRef:
+                    name: gq-apps-01-user-trusted-ca-secret   # lo crea 01-preparar-ca-harbor.sh
+                    key: harbor-ca
