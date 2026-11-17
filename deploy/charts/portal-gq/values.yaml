@@ -9,7 +9,7 @@ image:
   pullPolicy: IfNotPresent
 
 # Secret docker-registry con la cuenta robot de Harbor (solo pull).
-# Lo crea External Secrets a partir de Key Vault (ver externalSecrets.pullSecret).
+# Lo crea External Secrets a partir de AWS Secrets Manager (ver externalSecrets.pullSecret).
 imagePullSecrets:
   - name: harbor-pull
 
@@ -32,25 +32,29 @@ resources:
   limits: {cpu: 500m, memory: 256Mi}
 
 externalSecrets:
-  # ClusterSecretStore que apunta a Azure Key Vault (deploy/platform/secret-stores)
-  storeName: azure-kv
+  # ClusterSecretStore que apunta a AWS Secrets Manager (deploy/platform/secret-stores)
+  storeName: aws-sm
   refreshInterval: 1m
-  # Secret con la configuración de la app. Cada entrada mapea una variable a un secreto de Key Vault.
+  # Secret con la configuración de la app. Cada entrada mapea una variable a una llave (property)
+  # del secreto JSON en Secrets Manager. Sin property se toma el valor completo del secreto.
   appSecret:
     name: portal-gq-config
     data:
       - secretKey: DB_USER
-        remoteKey: portal-gq-db-user
+        remoteKey: gq-lab/portal-gq
+        property: db_user
       - secretKey: DB_PASSWORD
-        remoteKey: portal-gq-db-password
+        remoteKey: gq-lab/portal-gq
+        property: db_password
       - secretKey: API_KEY
-        remoteKey: portal-gq-api-key
+        remoteKey: gq-lab/portal-gq
+        property: api_key
       - secretKey: MENSAJE
-        remoteKey: portal-gq-mensaje
-  # Secret docker-registry para el imagePullSecret (cuenta robot de Harbor guardada en Key Vault)
+        remoteKey: gq-lab/portal-gq
+        property: mensaje
+  # Secret docker-registry para el imagePullSecret (cuenta robot de Harbor guardada en Secrets Manager)
   pullSecret:
     enabled: true
     name: harbor-pull
     registry: 10.2.20.7
-    usernameKey: harbor-robot-portal-gq-user
-    passwordKey: harbor-robot-portal-gq-password
+    remoteKey: gq-lab/harbor-robot-portal-gq   # JSON {"username": "...", "password": "..."}

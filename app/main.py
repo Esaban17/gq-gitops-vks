@@ -1,7 +1,7 @@
 """Portal GQ: app de demo para GitOps en VKS (Argo CD + Helm + External Secrets).
 
 Muestra la versión desplegada, el pod que atiende y los valores que llegan desde
-Azure Key Vault a través de External Secrets Operator:
+AWS Secrets Manager a través de External Secrets Operator:
   - como variables de entorno (envFrom): cambian solo cuando el pod se reinicia;
   - como archivo montado (/etc/portal/mensaje): cambia en vivo cuando ESO refresca el Secret.
 """
@@ -87,7 +87,7 @@ def index():
  <div class="card"><small>Versión desplegada (image.tag)</small>
   <div class="ver">{html.escape(e['version'])}</div>
   <small>Ambiente: {html.escape(e['ambiente'])} &middot; Pod: {html.escape(e['pod'])}</small></div>
- <div class="card"><small>Mensaje desde Azure Key Vault (archivo montado, cambia en vivo)</small>
+ <div class="card"><small>Mensaje desde AWS Secrets Manager (archivo montado, cambia en vivo)</small>
   <div class="msg">{html.escape(e['mensaje_en_vivo'])}</div></div>
  <div class="card"><small>Secretos como variables de entorno (Secret nativo creado por ESO)</small>
   <table>{filas}</table></div>
