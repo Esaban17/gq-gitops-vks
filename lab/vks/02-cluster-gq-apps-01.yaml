@@ -30,7 +30,7 @@ spec:
       - name: vmClass
         value: best-effort-medium
       - name: storageClass
-        value: vsan-default-storage-policy      # debe estar asignada al namespace gq-apps
+        value: supervisor-storage-policy        # asignada al namespace gq-apps
       - name: trust
         value:
           additionalTrustedCAs:
