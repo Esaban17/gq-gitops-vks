@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Registra el clúster VKS como destino de la instancia de Argo CD del Supervisor (namespace argocd-gq),
+# Registra el clúster VKS como destino de la instancia de Argo CD del Supervisor (namespace gq-apps),
 # igual que `argocd cluster add` pero sin el CLI de argocd:
 #   1) en el VKS: ServiceAccount argocd-manager + token
 #   2) en el Supervisor: Secret de tipo cluster en el namespace de Argo CD
@@ -8,7 +8,7 @@ set -euo pipefail
 CLUSTER="${CLUSTER:-gq-apps-01}"
 VKS_KUBECONFIG="${VKS_KUBECONFIG:-$HOME/.kube/$CLUSTER.kubeconfig}"
 SUP_CONTEXT="${SUP_CONTEXT:-sp-gq}"
-ARGO_NS="${ARGO_NS:-argocd-gq}"
+ARGO_NS="${ARGO_NS:-gq-apps}"
 
 K="kubectl --kubeconfig $VKS_KUBECONFIG"
 $K apply -f - <<YAML

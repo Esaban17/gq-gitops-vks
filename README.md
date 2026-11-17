@@ -12,7 +12,7 @@ GitOps y Helm" en GQ LAB, cambiando los servicios de Azure por GitHub y AWS (ECR
 | Azure Container Registry | Amazon ECR privado `portal-gq` (us-east-1, tags inmutables, escaneo al subir) |
 | SP de Entra con AcrPull para Harbor | Usuario IAM `harbor-ecr-pull-gq-lab` de solo lectura en el endpoint ECR de Harbor |
 | Harbor (proyecto privado, réplica pull programada) | Harbor regional `10.2.20.7`, proyecto `gq-apps` |
-| Argo CD (operador Broadcom, namespace DevOps) | ArgoCD Service 1.3.0, instancia en `argocd-gq` |
+| Argo CD (operador Broadcom, namespace DevOps) | ArgoCD Service 1.3.0, instancia en `gq-apps` |
 | Azure Key Vault + SP de Entra para ESO | AWS Secrets Manager + usuario IAM `eso-gq-lab` de solo lectura sobre `gq-lab/*` |
 | External Secrets (chart oficial como Application) | `deploy/argocd/apps/01-external-secrets.yaml` |
 | Aplicación (chart Helm, imagePullSecret robot) | `deploy/charts/portal-gq` (el robot también sale de Secrets Manager vía ESO) |

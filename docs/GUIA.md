@@ -5,7 +5,7 @@ Orden recomendado. Cada paso dice **dónde** se corre. "Mac" = tu Mac con `vcf`,
 
 ## 0. Prerrequisitos
 - ArgoCD Service 1.3.0 instalado en `supervisor-gq` y una instancia `ArgoCD` corriendo en el namespace
-  `argocd-gq` (ver `argocd-service/GUIA-ARGOCD-SERVICE.md`). Comprueba: `kubectl -n argocd-gq get pods`.
+  `gq-apps`, el mismo vSphere Namespace del clúster VKS (`lab/argocd/argocd-instancia.yaml`). Comprueba: `kubectl -n gq-apps get argocd,pods`.
 - Harbor regional Healthy (`https://10.2.20.7`, FQDN `depot.kube-system.svc`).
 - Salida a Internet (HTTPS 443), igual que en el recuadro rojo del diagrama:
   - Harbor → `api.ecr.us-east-1.amazonaws.com`, `<cuenta>.dkr.ecr.us-east-1.amazonaws.com`,
@@ -92,7 +92,7 @@ Secrets Manager, igual que el secreto del SP en el diagrama.
 ## 7. Argo CD: registrar el clúster y crear las Applications (Mac)
 ```
 bash lab/argocd/registrar-cluster-vks.sh
-kubectl --context sp-gq -n argocd-gq apply -f deploy/argocd/apps/
+kubectl --context sp-gq -n gq-apps apply -f deploy/argocd/apps/
 ```
 Orden por sync-wave: `external-secrets` (chart oficial 2.15.0) → `secret-stores` (ClusterSecretStore
 `aws-sm`) → `portal-gq-lab` (chart de la app). Las dos últimas reintentan solas mientras ESO arranca.
