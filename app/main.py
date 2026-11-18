@@ -82,7 +82,7 @@ def index():
  .msg{{font-size:20px;color:#e30613}}
  small{{color:#666}}
 </style></head><body>
-<header><h1>Portal GQ &middot; GitOps en VKS &middot; v2</h1></header>
+<header><h1>Portal GQ &ndash; Demo GitOps y VKS</h1></header>
 <main>
  <div class="card"><small>Versión desplegada (image.tag)</small>
   <div class="ver">{html.escape(e['version'])}</div>
