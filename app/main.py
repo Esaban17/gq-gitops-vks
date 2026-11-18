@@ -73,7 +73,7 @@ def index():
 <title>Portal GQ</title>
 <style>
  body{{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f6f6f6;color:#222}}
- header{{background:#e30613;color:#fff;padding:18px 24px}}
+ header{{background:#0b5cad;color:#fff;padding:18px 24px}}
  header h1{{margin:0;font-size:22px}}
  main{{max-width:760px;margin:24px auto;padding:0 16px}}
  .card{{background:#fff;border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}}
@@ -82,7 +82,7 @@ def index():
  .msg{{font-size:20px;color:#e30613}}
  small{{color:#666}}
 </style></head><body>
-<header><h1>Portal GQ &middot; GitOps en VKS</h1></header>
+<header><h1>Portal GQ &middot; GitOps en VKS &middot; v2</h1></header>
 <main>
  <div class="card"><small>Versión desplegada (image.tag)</small>
   <div class="ver">{html.escape(e['version'])}</div>
